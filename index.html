@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>  <html>  
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Calculator</title>
+<link rel="manifest" href="manifest.json">
+
+<style>  
+body{  
+font-family: Arial, sans-serif;  
+padding:20px;  
+background:#f4f4f4;  
+}  
+  
+.container{  
+background:white;  
+padding:20px;  
+border-radius:10px;  
+max-width:500px;  
+margin:auto;  
+box-shadow:0 0 10px rgba(0,0,0,0.1);  
+}  
+  
+h2{  
+text-align:center;  
+}  
+  
+.row{  
+display:flex;  
+gap:10px;  
+margin-bottom:10px;  
+}  
+  
+input{  
+width:100%;  
+padding:10px;  
+font-size:16px;  
+}  
+  
+button{  
+padding:10px;  
+font-size:16px;  
+margin-top:10px;  
+width:100%;  
+}  
+  
+.result{  
+margin-top:20px;  
+background:#eef3e8;  
+padding:15px;  
+border-radius:6px;  
+}  
+  
+#history{  
+padding-left:0;  
+list-style:none;  
+}  
+  
+.history-item{  
+background:#f2f2f2;  
+padding:10px;  
+margin-bottom:8px;  
+border-radius:6px;  
+font-size:14px;  
+}  
+  
+.history-line{  
+color:#555;  
+}  
+  
+.history-result{  
+font-weight:bold;  
+margin-top:4px;  
+}  
+  
+.main-result{
+font-size:28px;
+font-weight:bold;
+letter-spacing:1px;
+display:block;
+margin-top:6px;
+margin-bottom:10px;
+font-family: monospace;
+}
+
+.op-row{
+display:flex;
+justify-content:center;
+gap:40px;
+margin:10px 0;
+}
+
+.op-btn{
+display:flex;
+flex-direction:column;
+align-items:center;
+font-size:14px;
+cursor:pointer;
+}
+
+.op-btn input{
+margin-bottom:4px;
+}
+
+
+</style>  
+</head>  
+
+<body>  
+
+<div class="container">  
+
+<h2>Time Calculator</h2>  
+
+<h3>Input 1</h3>  
+<div class="row">  
+<input id="d1" placeholder="Days" type="number">  
+<input id="h1" placeholder="Hours" type="number">  
+<input id="m1" placeholder="Minutes" type="number">  
+<input id="s1" placeholder="Seconds" type="number">  
+</div>  
+
+<h3>Input 2</h3>  
+<div class="row">  
+<input id="d2" placeholder="Days" type="number">  
+<input id="h2" placeholder="Hours" type="number">  
+<input id="m2" placeholder="Minutes" type="number">  
+<input id="s2" placeholder="Seconds" type="number">  
+</div>  
+
+<div class="op-row">
+
+<label class="op-btn">
+<input type="radio" name="op" value="add" checked>
+<span>+ Tambah</span>
+</label>
+
+<label class="op-btn">
+<input type="radio" name="op" value="sub">
+<span>- Kurang</span>
+</label>
+
+</div>
+
+<div class="row">  
+<button onclick="calc()">Calculate</button>  
+</div>  <div class="result" id="output">  
+Result will appear here  
+</div>  
+
+<h3>History</h3>  
+<ul id="history"></ul>  <button onclick="clearHistory()">Clear History</button>
+
+</div>  
+
+<script>  
+  
+function toSeconds(d,h,m,s){  
+d = Number(d)||0  
+h = Number(h)||0  
+m = Number(m)||0  
+s = Number(s)||0  
+  
+return d*86400 + h*3600 + m*60 + s  
+}  
+  
+let historyList = []  
+  
+let historyBox = document.getElementById("history")  
+  
+let saved = localStorage.getItem("timeCalcHistory")
+
+if(saved){
+historyList = JSON.parse(saved)
+}
+
+function pad(n){
+return String(n).padStart(2,'0')
+}
+
+function formatTime(total){
+
+let days = Math.floor(total/86400)
+total %= 86400
+
+let hours = Math.floor(total/3600)
+total %= 3600
+
+let minutes = Math.floor(total/60)
+let seconds = total % 60
+
+let secFormatted = seconds.toFixed(2).padStart(5,'0')
+
+let timeString = pad(hours)+":"+pad(minutes)+":"+secFormatted
+
+if(days > 0){
+return days+"d "+timeString
+}else{
+return timeString
+}
+
+}
+  
+function calc(){  
+  
+let t1 = toSeconds(  
+d1.value,  
+h1.value,  
+m1.value,  
+s1.value  
+)  
+  
+let t2 = toSeconds(  
+d2.value,  
+h2.value,  
+m2.value,  
+s2.value  
+)  
+  
+let op = document.querySelector('input[name="op"]:checked').value  
+  
+let total  
+  
+if(op == "add"){  
+total = t1 + t2  
+}else{  
+total = t1 - t2  
+}  
+  
+if(total < 0){  
+total = 0  
+}  
+  
+let result = formatTime(total)  
+  
+let hours = (total/3600).toFixed(2)
+let minutes = (total/60).toFixed(2)
+let seconds = total.toFixed(2) 
+  
+output.innerHTML =
+"<b>Result:</b><br><span class='main-result'>"+result+"</span>"+
+"<br><br>"+
+"= "+hours+" hours"+
+"<br>"+
+"= "+minutes+" minutes"+
+"<br>"+
+"= "+seconds+" seconds"
+  
+let entry = `  
+<div class="history-item">  
+<div class="history-line">  
+${formatTime(t1)} ${op=="add" ? "+" : "-"} ${formatTime(t2)}  
+</div>  
+<div class="history-result">  
+= ${result}  
+</div>  
+</div>  
+`  
+  
+let record = {
+d1:d1.value,
+h1:h1.value,
+m1:m1.value,
+s1:s1.value,
+d2:d2.value,
+h2:h2.value,
+m2:m2.value,
+s2:s2.value,
+op:op,
+text:entry
+}
+
+historyList.unshift(record)
+
+localStorage.setItem("timeCalcHistory", JSON.stringify(historyList))  
+  
+renderHistory()  
+  
+}  
+  
+function renderHistory(){
+
+let html = ""
+
+historyList.forEach((item,i)=>{
+
+html += `<li onclick="loadHistory(${i})">${item.text}</li>`
+
+})
+
+document.getElementById("history").innerHTML = html
+
+}
+
+function loadHistory(i){
+
+let item = historyList[i]
+
+d1.value = item.d1
+h1.value = item.h1
+m1.value = item.m1
+s1.value = item.s1
+
+d2.value = item.d2
+h2.value = item.h2
+m2.value = item.m2
+s2.value = item.s2
+
+document.querySelector(`input[name="op"][value="${item.op}"]`).checked = true
+
+}
+  
+function clearHistory(){  
+historyList = []
+localStorage.removeItem("timeCalcHistory")
+renderHistory()
+}
+  
+renderHistory()
+</script>  
+
+<script>
+if ("serviceWorker" in navigator) {
+ window.addEventListener("load", function(){
+  navigator.serviceWorker.register("service-worker.js")
+ })
+}
+</script>
+
+</body>  
+</html>
